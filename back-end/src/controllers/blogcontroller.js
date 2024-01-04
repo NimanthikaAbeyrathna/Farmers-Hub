@@ -2,12 +2,11 @@ const express = require('express');
 const mongoose = require("mongoose");
 const multer = require('multer');
 const path = require('path');
-const  Users  = require('../model/userModel.js');
+const Users = require('../model/userModel.js');
 const blog = require('../model/blogModel.js');
+const like = require('../model/likeModel.js');
 
 const router = express.Router();
-
-router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 const storage = multer.diskStorage({
@@ -17,15 +16,25 @@ const storage = multer.diskStorage({
     },
 });
 
-const upload = multer({ storage });
-
-
+const upload = multer({storage});
 
 
 router.get('/', async (req, res) => {
     try {
-        const blogs = await blog.find();
+        const blogs = await blog.find().lean();
+
+        const likes = await like.find();
+        for (const blogItem of blogs) {
+
+            const blogItemIdString = blogItem._id.toString();
+
+            const blogLikes = likes.filter((likeItem) => likeItem.postID.toString() === blogItemIdString);
+            blogItem.likeCount = blogLikes.length;
+
+        }
+
         res.json(blogs);
+
     } catch (error) {
         res.status(500).json({error: error.message});
     }
@@ -45,7 +54,6 @@ router.get('/:id', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
 
 
 function decodeJwt(token) {
@@ -87,7 +95,7 @@ const getUserIdFromToken = (req) => {
 router.post('/', upload.array('images'), async (req, res) => {
     try {
 
-        if (!req.body.title || !req.body.content ) {
+        if (!req.body.title || !req.body.content) {
             return res.status(400).send('All fields are required to upload a blog');
         }
         const userId = getUserIdFromToken(req);

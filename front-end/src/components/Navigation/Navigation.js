@@ -15,10 +15,10 @@ export default function Navigation() {
                     <Link className='nav-link text-white text-decoration-none' to="/NewPost">New Post</Link>
                 </li>
                 <li className='nav-item text-white fs-6'>
-                    <a href="/about">About</a>
+                    <Link className='nav-link text-white text-decoration-none' to="">About</Link>
                 </li>
                 <li className='nav-item text-white fs-6'>
-                    <a href="/contact">Contact</a>
+                    <Link className='nav-link text-white text-decoration-none' to="">Contact</Link>
                 </li>
 
             </ul>
