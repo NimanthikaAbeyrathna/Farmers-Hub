@@ -34,8 +34,6 @@ export default function Home() {
             console.log(error);
         }
     };
-
-
     const getLikedPostIds = async () => {
         const jwtToken = localStorage.getItem('jwtToken');
 
@@ -59,14 +57,11 @@ export default function Home() {
         }
     };
 
-
     useEffect(() => {
         fetchData();
         getLikedPostIds();
 
     }, []);
-
-
     const handleLikeClick = async (postId) => {
         const jwtToken = localStorage.getItem('jwtToken');
 
@@ -126,20 +121,18 @@ export default function Home() {
             const response = await axios.post(`${process.env.REACT_APP_API_URL}/comment`, newCommentObject, {
                 headers: {
                     'Authorization': `Bearer ${jwtToken}`,
-
                 },
             });
 
-           
             setNewComment('');
             fetchData();
+            closeModal2();
 
         } catch (error) {
             console.error('Error:', error);
             alert(error.message || 'An error occurred');
         }
     };
-
 
     const settings = {
         dots: true,
@@ -150,21 +143,17 @@ export default function Home() {
         autoplay: true,
         autoplaySpeed: 2000
     };
-
     const openModal = (post) => {
         setSelectedPost(post);
     };
-
     const closeModal = () => {
         setSelectedPost(null);
     };
-
     const openModal2 = (post) => {
         setSelectedPostComment(post.commentSet);
         setToCommentPost(post);
 
     }
-
     const closeModal2 = () => {
         setSelectedPostComment(null);
         setToCommentPost(null);
@@ -284,7 +273,7 @@ export default function Home() {
                             </div>
                         ))}
                         <div className="d-flex p-2" style={{width: '500px'}}>
-                            <button className="mr-2 btn  rounded">
+                            <button className="mr-2 btn  rounded" onClick={() => handleLikeClick(selectedPost._id)}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                      className="bi bi-heart-fill" viewBox="0 0 16 16">
                                     <path fillRule="evenodd"
@@ -293,7 +282,7 @@ export default function Home() {
                             </button>
                             <div>{selectedPost.likeCount}</div>
                             <br/>
-                            <button className="mr-2 btn  rounded">
+                            <button className="mr-2 btn  rounded" onClick={() => openModal2(selectedPost)}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                      fill="blue" className="bi bi-chat-left-dots"
                                      viewBox="0 0 16 16">
@@ -303,7 +292,7 @@ export default function Home() {
                                         d="M5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                                 </svg>
                             </button>
-                            <div>0</div>
+                            <div>{selectedPost.commentSet.length}</div>
                         </div>
                         <p className='text-warning'>{selectedPost.authorName}</p>
                         <p className='text-success'>{new Date(selectedPost.createdAt).toLocaleString()}</p>
