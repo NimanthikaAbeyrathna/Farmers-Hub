@@ -16,6 +16,10 @@ export default function Home() {
     const [selectedPost, setSelectedPost] = useState(null);
     const [likedPosts, setLikedPosts] = useState([]);
     const [likeId, setLikeId] = useState('');
+    const [userLikedPostIds, setUserLikedPostIds] = useState('');
+    const [selectedPostComment, setSelectedPostComment] = useState(null);
+    const [toCommentPost, setToCommentPost] = useState(null);
+    const [newComment, setNewComment] = useState('');
 
     const fetchData = async () => {
         try {
@@ -24,29 +28,46 @@ export default function Home() {
                 alert('Error getting blogs');
             } else {
                 setPosts(response.data);
-                console.log(response.data);
+
             }
         } catch (error) {
             console.log(error);
         }
     };
 
+
+    const getLikedPostIds = async () => {
+        const jwtToken = localStorage.getItem('jwtToken');
+
+        if (!jwtToken) {
+            console.error('JWT token not available, please log in');
+            return;
+        }
+
+        try {
+            const response = await axios.get(`${process.env.REACT_APP_API_URL}/like/likedpost`, {
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}`
+                }
+            });
+
+            setUserLikedPostIds(response.data);
+
+        } catch (error) {
+            console.error('Error fetching liked post ids:', error);
+
+        }
+    };
+
+
     useEffect(() => {
         fetchData();
+        getLikedPostIds();
+
     }, []);
 
-    const handleLikeClick = async (postId) => {
-        setLikedPosts((prevLikedPosts) => {
-            if (prevLikedPosts.includes(postId)) {
-                return prevLikedPosts.filter((id) => id !== postId); // Remove like
-                const responce = axios.delete(`${process.env.REACT_APP_API_URL}/like/${likeId}`);
-                setLikeId('');
-                fetchData();
-            } else {
-                return [...prevLikedPosts, postId]; // Add like
-            }
-        });
 
+    const handleLikeClick = async (postId) => {
         const jwtToken = localStorage.getItem('jwtToken');
 
         if (!jwtToken) {
@@ -60,19 +81,65 @@ export default function Home() {
         };
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/like`, like, {
-                headers: {
-                    'Authorization': `Bearer ${jwtToken}`
-                },
+            if (likeId) {
+                // If likeId exists, it means the post was already liked, so we need to delete the like
+                await axios.delete(`${process.env.REACT_APP_API_URL}/like/${likeId}`);
+                setLikeId('');
+            } else {
+                // If likeId is not present, it means the post is not liked, so we need to add the like
+                const response = await axios.post(`${process.env.REACT_APP_API_URL}/like`, like, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    },
+                });
+                setLikeId(response.data._id);
+            }
+
+            // Update likedPosts after successful like/unlike
+            setLikedPosts((prevLikedPosts) => {
+                if (prevLikedPosts.includes(postId)) {
+                    return prevLikedPosts.filter((id) => id !== postId);
+                } else {
+                    return [...prevLikedPosts, postId]; // Add like
+                }
             });
+
             fetchData();
-            setLikeId(response._id);
-            console.log(response);
         } catch (error) {
             console.error(error);
         }
-
     };
+    const postComment = async (_id) => {
+
+        const jwtToken = localStorage.getItem('jwtToken');
+
+        if (!jwtToken) {
+            console.error('JWT token not available, please log in');
+            return;
+        }
+        const newCommentObject = {
+            content: newComment,
+            postID: _id,
+            createdAt: new Date().toISOString()
+        }
+        try {
+            const response = await axios.post(`${process.env.REACT_APP_API_URL}/comment`, newCommentObject, {
+                headers: {
+                    'Authorization': `Bearer ${jwtToken}`,
+
+                },
+            });
+
+           
+            setNewComment('');
+            fetchData();
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred');
+        }
+    };
+
 
     const settings = {
         dots: true,
@@ -92,6 +159,18 @@ export default function Home() {
         setSelectedPost(null);
     };
 
+    const openModal2 = (post) => {
+        setSelectedPostComment(post.commentSet);
+        setToCommentPost(post);
+
+    }
+
+    const closeModal2 = () => {
+        setSelectedPostComment(null);
+        setToCommentPost(null);
+    }
+
+
     return (
         <div className='container-fluid'>
             <div className='row'>
@@ -102,7 +181,7 @@ export default function Home() {
                     </button>
                 </header>
                 <Navigation/>
-                <div className='col-md-10'>
+                <div className='col-md-10' id='conainercontain'>
                     <div className='container'>
                         <div className='row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4'>
                             {posts.map((post) => (
@@ -123,17 +202,19 @@ export default function Home() {
                                         <div className="d-flex p-2" style={{width: '500px'}}>
                                             <button className="mr-2 btn  rounded"
                                                     onClick={() => handleLikeClick(post._id)}>
-                                                <svg style={{fill: likedPosts.includes(post._id) ? 'red' : 'black'}}
-                                                     xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                     className="bi bi-heart-fill"
-                                                     viewBox="0 0 16 16">
-                                                    <path fill-rule="evenodd"
+                                                <svg
+                                                    style={{fill: likedPosts.includes(post._id) && userLikedPostIds.includes(post._id) ? 'red' : 'black'}}
+                                                    xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    className="bi bi-heart-fill"
+                                                    viewBox="0 0 16 16">
+                                                    <path fillRule="evenodd"
                                                           d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
                                                 </svg>
                                             </button>
                                             <div>{post.likeCount}</div>
                                             <br/>
-                                            <button className="mr-2 btn  rounded">
+                                            <button className="mr-2 btn  rounded"
+                                                    onClick={() => openModal2(post)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                      fill="blue" className="bi bi-chat-left-dots"
                                                      viewBox="0 0 16 16">
@@ -143,7 +224,7 @@ export default function Home() {
                                                         d="M5 6a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                                                 </svg>
                                             </button>
-                                            <div>0</div>
+                                            <div>{post.commentSet.length}</div>
                                         </div>
                                         <div className='card-footer' style={{background: 'none'}}>
                                             <h5 className='card-title'>{post.title}</h5>
@@ -161,9 +242,9 @@ export default function Home() {
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                  fill="currentColor" className="bi bi-box-arrow-up-right"
                                                  viewBox="0 0 16 16">
-                                                <path fill-rule="evenodd"
+                                                <path fillRule="evenodd"
                                                       d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
-                                                <path fill-rule="evenodd"
+                                                <path fillRule="evenodd"
                                                       d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
                                             </svg>
                                         </button>
@@ -206,7 +287,7 @@ export default function Home() {
                             <button className="mr-2 btn  rounded">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                      className="bi bi-heart-fill" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd"
+                                    <path fillRule="evenodd"
                                           d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
                                 </svg>
                             </button>
@@ -228,6 +309,58 @@ export default function Home() {
                         <p className='text-success'>{new Date(selectedPost.createdAt).toLocaleString()}</p>
                         <p>{selectedPost.content}</p>
 
+                    </div>
+                )}
+            </Modal>
+            <Modal
+                isOpen={toCommentPost !== null}
+                onRequestClose={closeModal2}
+                contentLabel='Post Modal'
+                className='Modal'
+            >
+                {toCommentPost && (
+                    <div className="modal-content">
+                        <button
+                            onClick={closeModal2}
+                            className="position-absolute top-0 end-0 btn"
+                            style={{padding: '5px'}}
+                        >
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                fill="currentColor"
+                                className="bi bi-x-lg"
+                                viewBox="0 0 16 16"
+                            >
+                                <path
+                                    d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"
+                                />
+                            </svg>
+                        </button>
+                        {toCommentPost.commentSet.map((comment) => (
+                            <div key={comment._id}
+                                 style={{backgroundColor: 'lightgrey', marginBottom: '10px', padding: '10px'}}>
+                                <p>{comment.authorName}</p>
+                                <p>{comment.createdAt}</p>
+                                <h6>{comment.content}</h6>
+                            </div>
+                        ))}
+
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder='Type your comment here...'
+
+                        />
+
+                        <button
+                            onClick={() => postComment(toCommentPost._id)}
+                            className=" bottom-0 end-0 btn btn-primary "
+                            style={{width: '100px'}}
+                        >
+                            Post
+                        </button>
                     </div>
                 )}
             </Modal>

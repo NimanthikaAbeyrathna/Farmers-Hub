@@ -28,6 +28,7 @@ const blogSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+
 });
 
 const blog = mongoose.model('blog', blogSchema, 'blogposts');

@@ -74,15 +74,33 @@ router.post('/',  async (req, res) => {
         res.status(500).send('Failed to like. Please try again.');
     }
 });
+router.get('/likedpost',async (req,res)=>{
+
+    const userId = getUserIdFromToken(req);
+    const result = await  like.find({ "authorID": `${userId}` }, { "postID": 1, "_id": 0 });
+    const postIDs = result.map(item => item.postID);
+    const uniquePostIDs = Array.from(new Set(postIDs));
+
+    res.json(uniquePostIDs);
+});
 
 router.delete('/:id', async (req, res) => {
 
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).send('Invalid like ID');
+        }
+
         const result = await like.findByIdAndDelete(req.params.id);
+
+        if (!result) {
+            return res.status(404).send('Like not found');
+        }
+
         res.send(result);
     } catch (err) {
-        res.status(500).send('Not Found');
+        console.error(err);
+        res.status(500).send('Internal Server Error');
     }
-
 });
 module.exports = router;

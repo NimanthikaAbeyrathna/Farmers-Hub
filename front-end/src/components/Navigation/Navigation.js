@@ -6,7 +6,8 @@ import 'bootstrap-icons/font/bootstrap-icons.css'
 
 export default function Navigation() {
     return (
-        <div className='bg-dark col-auto col-md-2 min-vh-100'>
+        <div id='navigationset' className='bg-dark col-auto col-md-2 min-vh-100'>
+            <br/>
             <ul className='nav nav-pills flex-column'>
                 <li className='nav-item text-white fs-6'>
                     <Link className='nav-link text-white text-decoration-none' to="/home">Home</Link>
