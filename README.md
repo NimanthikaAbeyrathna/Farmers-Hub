@@ -47,7 +47,7 @@ Follow these steps to set up and run the Farmers Hub Blog App locally:
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/farmers-hub-blog.git
+   git clone https://github.com/NimanthikaAbeyrathna/Farmers-Hub.git
    
 2. Install dependencies:
 
