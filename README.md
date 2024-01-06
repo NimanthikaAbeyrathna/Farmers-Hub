@@ -12,6 +12,8 @@ Farmers Hub is a blog app designed for farmers to share their experiences, insig
 
 ## Technologies Used
 
+## MERN stack
+
 ### Frontend
 
 - **React.js**: JavaScript library for building user interfaces.
