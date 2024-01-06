@@ -32,7 +32,6 @@ Farmers Hub is a blog app designed for farmers to share their experiences, insig
 - **bcrypt**: Library for hashing passwords.
 - **cors**: Middleware for handling Cross-Origin Resource Sharing.
 - **dotenv**: Module for loading environment variables.
-- **Axios**: To send API request.
 - **jsonwebtoken**: Library for creating and verifying JSON Web Tokens.
 - **mongoose**: ODM library for MongoDB and Node.js.
 - **multer**: Middleware for handling multipart/form-data (used for file uploads).
